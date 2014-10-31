@@ -41,9 +41,34 @@ class TableManager
     @news_data[:banner] << @content[1..16]
     @news_data[:top_picks] << @content[17..-1]
   end
+
+  def grab_links(data)
+    @data = data
+    bannerHTML = '' 
+    banners = @data[:banner]
+    top_picks = @data[:top_picks] # from the second element to the last 
+
+    array_banner
+
+    # banners.each do |banner|
+    #   banner.values.each {|i| array_banner << i if i != nil }
+    # end   
+
+    # #EVEN index and ZERO will be titles and ODD index will be urls
+    # array_banner.each_with_index do |e, i|
+    #   if i % 2 == 0 || i == 0
+    #     p "This is title= #{ e }"
+    #   else
+    #     p "This is URl= #{ e }"
+    #   end 
+    # end 
+  end
+
 end
 
 
 #TESTING
 t1 = TableManager.new
 t1.open_csv('email_test.csv')
+t1.grab_links(t1.news_data)
+# t1.grab_links(t1.news_data[:top_picks])
