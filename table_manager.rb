@@ -12,7 +12,7 @@ class TableManager
     @news_data[:top_picks] = []
   end
 
-#CSV
+#### CSV convert data to HTML <a>tag with attributes(title, alt and so on)
   def open_csv(file_name)
     @content = []
     CSV.foreach(file_name,
@@ -30,7 +30,7 @@ class TableManager
     
     #filtering banner and top picks 
     @content.each_with_index do |c, i|
-      if c[:product_details].nil? && i < 3
+      if c[:product_details].nil? && i < 3 # banner will be within the third colum.
         @news_data[:banner] << c
       else
         @news_data[:top_picks] << c
@@ -42,7 +42,7 @@ class TableManager
   def grab_links(data)
     @data = data
     bannerHTML = '' 
-    banners = @data[:banner]
+    banners = @data[:banner] 
     top_picks = @data[:top_picks] # from the second element to the last 
 
     # banners HTML
@@ -75,42 +75,36 @@ class TableManager
         p "There is no cta links for TOP PICKS"
       end 
     end 
+
+    ## TRY TO PRINT THEM HERE,
     # @html_banners
     # @html_top_picks
-    # puts 'This is banners,'
+    # puts 'This is banners,' 
     # puts @html_banners
     # puts 'This is top_picks,'
     # puts @html_top_picks
   end
 
-  #HTML
-  def original_html(htmlfile)
+#### HTML
+  def html_with_style(htmlfile)
     td_style = ["<td", "<td style='font-size: 8px;'"]
     img_style = ["<img", "<img style='display: block; border: 0px; font-size: 8px;'"]
-    replacements = [] << td_style << img_style
+    # replacements = [] << td_style << img_style  
 
     infile = htmlfile
-    outfile = "index.html"
+    outfile = "test_output.html"
 
-  # TRY ONE 
-    # File.open(outfile, 'w') do |out|
-    #  replacements.each {|replacement| out << File.open(infile).read.gsub(replacement[0], replacement[1])}
-    # end
-
-  # TRY TWO
     text = File.read(htmlfile)
     new_contents = text.gsub("<td", "<td style='font-size: 8px;'")
     new_contents = new_contents.gsub("<img", "<img style='display: block; border: 0px; font-size: 8px;'")
     File.open(outfile, "w") {|out| out << new_contents }
 
-  # TRY THREE
-    # File.open(outfile, 'w') do |out_v1|
-    #   out_v1 << File.open(infile).read.gsub("<td", "<td style='font-size: 8px;'")
-    # end
-    # File.open(outfile, 'w') do |out_v2|
-    #   out_v2 << File.open(outfile).read.gsub("<img", "<img style='display: block; border: 0px; font-size: 8px;'")
-    # end
   end
+
+  def insert_links(file_name)
+
+
+  end 
 
 end
 
@@ -119,4 +113,4 @@ end
 t1 = TableManager.new
 t1.open_csv('email_test.csv')
 t1.grab_links(t1.news_data)
-t1.original_html('test_input.html')
+t1.html_with_style('test_input.html')
