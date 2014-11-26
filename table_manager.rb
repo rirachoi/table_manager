@@ -12,7 +12,7 @@ class TableManager
     @news_data[:top_picks] = []
   end
 
-#### CSV convert data to HTML <a>tag with attributes(title, alt and so on)
+#### CSV : convert data to HTML <a>tag with attributes(title, alt and so on)
   def open_csv(file_name)
     @content = []
     CSV.foreach(file_name,
@@ -64,7 +64,7 @@ class TableManager
         product_html = "<a href='#{ t[:product_links]}' title='#{t[:product_details]}' alt='#{t[:product_details]}' target='_blank'>"
         @html_top_picks << product_html
       else
-        p "There is no product links for TOP PICKS"      
+        "There is no product links for TOP PICKS"      
       end 
       # CTA for top picks
       if t[:cta_link] != nil 
@@ -72,7 +72,7 @@ class TableManager
         
         @html_top_picks << pro_cta_html      
       else
-        p "There is no cta links for TOP PICKS"
+        "There is no cta links for TOP PICKS"
       end 
     end 
 
@@ -87,30 +87,35 @@ class TableManager
 
 #### HTML
   def html_with_style(htmlfile)
-    td_style = ["<td", "<td style='font-size: 8px;'"]
-    img_style = ["<img", "<img style='display: block; border: 0px; font-size: 8px;'"]
-    # replacements = [] << td_style << img_style  
-
     infile = htmlfile
     outfile = "test_output.html"
 
     text = File.read(htmlfile)
-    new_contents = text.gsub("<td", "<td style='font-size: 8px;'")
-    new_contents = new_contents.gsub("<img", "<img style='display: block; border: 0px; font-size: 8px;'")
-    File.open(outfile, "w") {|out| out << new_contents }
 
+    # MAIN TABLE STYLE
+    new_contents = text.gsub(/id="Table_01" /, "")
+    # TD Style
+    new_contents = new_contents.gsub(/<td"/, "<td style='font-size: 8px;'" )
+    # IMG Style
+    new_contents = new_contents.gsub(/<img/, "<img style='display: block; border: 0px; font-size: 8px;'")
+    # TR SPACER GIF Style 
+    new_contents = new_contents.gsub('\' src="images/spacer.gif"', ' -webkit-text-size-adjust: none !important; -moz-text-size-adjust:none !important;\' src="images/spacer.gif"')
+    # TEST OUTPUT html
+    File.open(outfile, "w") {|out| out << new_contents }
   end
 
   def insert_links(file_name)
-
-
   end 
 
 end
 
 
 #TESTING
+
+
 t1 = TableManager.new
 t1.open_csv('email_test.csv')
 t1.grab_links(t1.news_data)
-t1.html_with_style('test_input.html')
+# Grab input html file
+the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
+t1.html_with_style(the_input_file)
