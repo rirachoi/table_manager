@@ -93,9 +93,9 @@ class TableManager
     text = File.read(htmlfile)
 
     # MAIN TABLE STYLE
-    new_contents = text.gsub(/id="Table_01" /, "")
+    new_contents = text.gsub(/id="Table_01" /, "style='min-width:620px;' ")
     # TD Style
-    new_contents = new_contents.gsub(/<td"/, "<td style='font-size: 8px;'" )
+    new_contents = new_contents.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
     # IMG Style
     new_contents = new_contents.gsub(/<img/, "<img style='display: block; border: 0px; font-size: 8px;'")
     # TR SPACER GIF Style 
