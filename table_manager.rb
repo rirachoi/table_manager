@@ -6,11 +6,14 @@ class TableManager
 
   def initialize(news_data=nil)
     @news_data = {}
-    @news_data[:banner] = []
-    @news_data[:top_picks] = []
+    @news_data[:banner] = {}
+    @news_data[:top_picks] = {}
+    @news_data[:shopping_cta] = {}
   end
 
 #### CSV : convert data to HTML <a>tag with attributes
+  
+  # Open CSV File and Save @content without empty cells
   def open_csv(file_name)
     @content = []
     CSV.foreach(file_name,
@@ -25,16 +28,32 @@ class TableManager
         @content << hash_row
       end
     end
-    
-    #filtering banner and top picks 
+  end 
+  
+  #Filtering the main banner, top picks and shopping cta
+  def filtering_links      
     @content.each_with_index do |c, i|
-      if c[:product_details].nil? && i < 3 # banner will be within the third colum.
-        @news_data[:banner] << c
+      # Validate URL
+      if !c[:cta].nil? && (c[:cta_link]).split(/\./).first != "http://www" 
+        invalid_url = (c[:cta_link]).split(/\./)[1..-1] # If there is no http:// - start with only 'www.'
+        c[:cta_link] = invalid_url.unshift("http://www").join('.')
       else
-        @news_data[:top_picks] << c
+        c[:cta_link]
       end 
-      # p @news_data[:top_picks]
+
+      #HASH FORMAT( title[link] )
+      if !c[:cta].nil? && i < 4 # The main banner will be within indext of 3.
+        @news_data[:banner][c[:cta]] = c[:cta_link]
+      elsif !c[:product_details].nil? # The top picks that have product details.
+        @news_data[:top_picks][c[:product_details]] = c[:product_links]
+      else
+        @news_data[:shopping_cta][c[:cta]] = c[:cta_link] # Shopping cta buttons.
+      end 
     end
+    @news_data
+    # p @news_data[:banner] 
+    # p @news_data[:top_picks] 
+    # p @news_data[:shopping_cta]      
   end
 
   def grab_links(data)
@@ -71,7 +90,7 @@ class TableManager
         @html_top_picks << pro_cta_html      
       else
         "There is no cta links for TOP PICKS"
-      end 
+      end  
     end 
 
     ## TRY TO PRINT THEM HERE,
@@ -114,6 +133,7 @@ end
 
 t1 = TableManager.new
 t1.open_csv('email_test.csv')
+t1.filtering_links
 # t1.grab_links(t1.news_data)
 # Grab input html file
 the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
