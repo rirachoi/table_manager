@@ -1,6 +1,4 @@
 require 'csv'
-require 'erb'
-# require 'require_all'
 
 class TableManager
 
@@ -77,12 +75,12 @@ class TableManager
     end 
 
     ## TRY TO PRINT THEM HERE,
-    # @html_banners
-    # @html_top_picks
-    # puts 'This is banners,' 
-    # puts @html_banners
-    # puts 'This is top_picks,'
-    # puts @html_top_picks
+    @html_banners
+    @html_top_picks
+    puts 'This is banners,' 
+    puts @html_banners
+    puts 'This is top_picks,'
+    puts @html_top_picks
   end
 
 #### HTML
@@ -93,7 +91,7 @@ class TableManager
     text = File.read(htmlfile)
 
     # MAIN TABLE STYLE
-    new_contents = text.gsub(/id="Table_01" /, "style='min-width:620px;' ")
+    new_contents = text.gsub(/id="Table_01" /, "style='min-width:620px;' align='center' ")
     # TD Style
     new_contents = new_contents.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
     # IMG Style
@@ -105,6 +103,7 @@ class TableManager
   end
 
   def insert_links(file_name)
+
   end 
 
 end
@@ -115,7 +114,7 @@ end
 
 t1 = TableManager.new
 t1.open_csv('email_test.csv')
-t1.grab_links(t1.news_data)
+# t1.grab_links(t1.news_data)
 # Grab input html file
 the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
 t1.html_with_style(the_input_file)
