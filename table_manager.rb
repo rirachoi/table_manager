@@ -10,7 +10,7 @@ class TableManager
     @news_data[:top_picks] = []
   end
 
-#### CSV : convert data to HTML <a>tag with attributes(title, alt and so on)
+#### CSV : convert data to HTML <a>tag with attributes
   def open_csv(file_name)
     @content = []
     CSV.foreach(file_name,
@@ -20,7 +20,7 @@ class TableManager
                 ) do |row|
       # Make CSV data as hash
       hash_row = row.to_hash
-      # Get rid of blank cells
+      # Get rid of blank cells - Putting all data into @content
       if hash_row[:product_details] != nil || hash_row[:cta_link] != nil
         @content << hash_row
       end
@@ -91,7 +91,7 @@ class TableManager
     text = File.read(htmlfile)
 
     # MAIN TABLE STYLE
-    new_contents = text.gsub(/id="Table_01" /, "style='min-width:620px;' align='center' ")
+    new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3")
     # TD Style
     new_contents = new_contents.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
     # IMG Style
