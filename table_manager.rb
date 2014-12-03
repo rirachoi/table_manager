@@ -12,8 +12,7 @@ class TableManager
     @news_data[:shopping_cta] = {}
   end
 
-### CSV : convert data to HTML <a>tag with attributes
-  
+### CSV : convert data to HTML <a>tag with attributes  
   # Open CSV File and Save @content without empty cells
   def open_csv(file_name)
     @content = []
@@ -34,7 +33,7 @@ class TableManager
   # Filtering the main banner, top picks and shopping cta
   def filtering_links      
     @content.each_with_index do |c, i|
-      # Validate URL - Only for CTA because the product links are picked up from the website
+      # Validate URL - Only for CTA, as the product links are picked up from the website
       if !c[:cta].nil? && (c[:cta_link]).split(/\./).first != "http://www" 
         invalid_url = (c[:cta_link]).split(/\./)[1..-1] # If there is no http:// - When start with only 'www.'
         c[:cta_link] = invalid_url.unshift("http://www").join('.')
@@ -48,13 +47,12 @@ class TableManager
       elsif !c[:product_details].nil? # The top picks that have product details.
         @news_data[:top_picks][c[:product_details]] = c[:product_links]
       else
-        @news_data[:shopping_cta][c[:cta]] = c[:cta_link] # Shopping cta buttons.
+        @news_data[:shopping_cta][c[:cta]] = c[:cta_link] # Shopping CTA buttons.
       end 
     end
+
     @news_data
-    # p @news_data[:banner] 
-    # p @news_data[:top_picks] 
-    # p @news_data[:shopping_cta]      
+
   end
 
   def grab_links(news_data)
@@ -83,10 +81,9 @@ class TableManager
       @href_links = shopping_cta.pop
       "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
     end 
-    p banners
-    p top_picks
-    p shopping_ctas
-
+    # p banners
+    # p top_picks
+    # p shopping_ctas
 
   end
 
@@ -110,8 +107,65 @@ class TableManager
   end
 
   def insert_links(output_file, news_data)
+
+  # Define data  
     @output_file = output_file
     @news_data = news_data
+
+    @news_data = news_data 
+    banners = @news_data[:banner] 
+    top_picks = @news_data[:top_picks]
+    shopping_ctas = @news_data[:shopping_cta]
+ 
+    # Empty array for <a>tag string.
+    banner_to_s = []
+    top_pick_to_s = []
+    shopping_cta_to_s = []
+
+    array_of_links = [] << banners << top_picks << shopping_ctas
+
+    # Banner's HTML
+    banners.each do |banner|
+      @title = banner.shift
+      @href_links = banner.pop
+      banner_to_s << "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
+    end 
+
+    # Top Picks's HTML
+    top_picks.each do |top_pick|
+      @title = top_pick.shift
+      @href_links = top_pick.pop
+      top_pick_to_s << "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
+    end 
+
+    # Shopping CTA's HTML
+    shopping_ctas.each do |shopping_cta|
+      @title = shopping_cta.shift
+      @href_links = shopping_cta.pop
+      shopping_cta_to_s << "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
+    end 
+  # 
+    # puts array_of_links
+    # p banner_to_s
+    # p top_pick_to_s
+    # p shopping_cta_to_s
+    
+  # Matching alt tag(from Photoshop) with @title(from CSV)
+    text = File.read('test_output.html')
+
+   content_with_links = text.gsub(/(<img)([.\n\r\s\S]*?[.\s\S]*?alt[:=]"?)([.\n\r\s\S]*?)("?>)/, '<a href="#" title="\\3" target="_blank">\\1\\2\\3\\4</a>')
+
+    # content_with_links = ""
+    # text.scan(/(<img)([.\n\r\s\S]*?[.\s\S]*?alt[:=]"?)([.\n\r\s\S]*?)("?>)/) do |x|
+
+    #   if x[-2] != ""
+    #     content_with_links << x.join.to_s.gsub(/(<img)([.\n\r\s\S]*?[.\s\S]*?alt[:=]"?)([.\n\r\s\S]*?)("?>)/, '<a href="#" title="\\3" target="_blank">\\1\\2\\3\\4</a>')
+    #   else
+    #     content_with_links << x.join.to_s
+    #   end 
+    # end
+
+    File.open('test_output.html', "w") {|out| out << content_with_links}
   end 
 
 end
@@ -134,4 +188,6 @@ t1.grab_links(t1.news_data)
 the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
 t1.html_with_style(the_input_file)
 
+# # Insert links
+# t1.insert_links('test_output.html', t1.news_data)
 
