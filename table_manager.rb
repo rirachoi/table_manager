@@ -1,21 +1,18 @@
 require 'csv'
+require 'nokogiri'
 
 class TableManager
 
-  attr_accessor :news_data
+  attr_accessor :content
 
 ### Initialize - Creating empty Hashes
-  def initialize(news_data=nil)
-    @news_data = {}
-    @news_data[:banner] = {}
-    @news_data[:top_picks] = {}
-    @news_data[:shopping_cta] = {}
+  def initialize(content=nil)
+    @content = []
   end
 
 ### CSV : convert data to HTML <a>tag with attributes  
   # Open CSV File and Save @content without empty cells
   def open_csv(file_name)
-    @content = []
     CSV.foreach(file_name,
                 :headers => true,
                 :converters => :all,
@@ -29,9 +26,10 @@ class TableManager
       end
     end
   end 
-  
-  # Filtering the main banner, top picks and shopping cta
-  def filtering_links      
+
+
+  # Filtering links
+  def filtering_links     
     @content.each_with_index do |c, i|
       # Validate URL - Only for CTA, as the product links are picked up from the website
       if !c[:cta].nil? && (c[:cta_link]).split(/\./).first != "http://www" 
@@ -40,21 +38,10 @@ class TableManager
       else
         c[:cta_link]
       end 
-
-      # HASH FORMAT( title[link] )
-      if !c[:cta].nil? && i < 4 # The main banner will be within index of 3.
-        @news_data[:banner][c[:cta]] = c[:cta_link]
-      elsif !c[:product_details].nil? # The top picks that have product details.
-        @news_data[:top_picks][c[:product_details]] = c[:product_links]
-      else
-        @news_data[:shopping_cta][c[:cta]] = c[:cta_link] # Shopping CTA buttons.
-      end 
     end
-
-    @news_data
+    # puts @content
 
   end
-
 
 ### HTML - Insert code for Email. 
   def html_with_style(htmlfile)
@@ -72,60 +59,27 @@ class TableManager
     # TR SPACER GIF Style 
     new_contents = new_contents.gsub('\' src="images/spacer.gif"', ' -webkit-text-size-adjust: none !important; -moz-text-size-adjust:none !important;\' src="images/spacer.gif"')
     # TEST OUTPUT html
-    File.open(outfile, "w") {|out| out << new_contents }
+    File.open(outfile, "w") {|out| out << new_contents } # No need to close the file when using the block for File class.
   end
 
-  def insert_links(output_file, news_data)
+  def insert_links(output_file)
 
-  # Define data  
-    @output_file = output_file
-    @news_data = news_data
+  ## Matching alt tag(from Photoshop) with @title(from CSV)
+    html_string = File.read(output_file)
 
-    @news_data = news_data 
-    banners = @news_data[:banner] 
-    top_picks = @news_data[:top_picks]
-    shopping_ctas = @news_data[:shopping_cta]
- 
-    # Empty array for <a>tag string.
-    banner_to_s = []
-    top_pick_to_s = []
-    shopping_cta_to_s = []
+    # Inserting '#' links when the <img> has alt tag.
+    html_string = html_string.gsub(/(<img.*alt=")(.+)(">)/, '<a href="#" target="_blank">\\1\\2" title="\\2\\3</a>')
 
-    array_of_links = [] << banners << top_picks << shopping_ctas
+    # Inserting products links
+    doc = Nokogiri::HTML(html_string)
 
-    # Banner's HTML
-    banners.each do |banner|
-      @title = banner.shift
-      @href_links = banner.pop
-      banner_to_s << "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
-    end 
+    doc.xpath("//a").each_with_index do |a, i|
+    next if i > @content.length - 1 or @content[i][:product_links].nil? or !@content[i][:product_links].include? 'http'
+      a['href'] = @content[i][:product_links]
+    end
 
-    # Top Picks's HTML
-    top_picks.each do |top_pick|
-      @title = top_pick.shift
-      @href_links = top_pick.pop
-      top_pick_to_s << "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
-    end 
-
-    # Shopping CTA's HTML
-    shopping_ctas.each do |shopping_cta|
-      @title = shopping_cta.shift
-      @href_links = shopping_cta.pop
-      shopping_cta_to_s << "<a href=\"#{ @href_links }\" target=\"_blank\" title=\"#{ @title }\">"
-    end 
-
-    # puts array_of_links
-    # p banner_to_s
-    # p top_pick_to_s
-    # p shopping_cta_to_s
-
-
-  # Matching alt tag(from Photoshop) with @title(from CSV)
-    text = File.read('test_output.html')
-    content_with_links = text.gsub(/(<img.*alt=")(.+)(">)/, '<a href="#" target="_blank">\\1\\2" title="\\2\\3</a>')
-    # content_with_links = content_with_links.sub(/#/,)
-    File.open('test_output.html', "w") { |out| out << content_with_links }
-
+    File.open(output_file, "w") {|out| out << doc.to_s }
+    
   end 
 
 end
@@ -148,5 +102,5 @@ the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
 t1.html_with_style(the_input_file)
 
 # Insert links
-t1.insert_links('test_output.html', t1.news_data)
+t1.insert_links('test_output.html')
 
