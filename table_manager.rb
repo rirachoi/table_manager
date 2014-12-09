@@ -5,7 +5,7 @@ class TableManager
 
   attr_accessor :content
 
-### Initialize - Creating empty Hashes
+### Initialize - Creating an empty array
   def initialize(content=nil)
     @content = []
   end
@@ -50,7 +50,7 @@ class TableManager
     new_contents = new_contents.gsub(/<\/td>/, "\n\t\t<\/td>")
     # IMG Style
     new_contents = new_contents.gsub(/<img/, "<img style='display: block; border: 0px; font-size: 8px;'")
-    # TR SPACER GIF Style 
+    # SPACER GIF Style 
     new_contents = new_contents.gsub('\' src="images/spacer.gif"', ' -webkit-text-size-adjust: none !important; -moz-text-size-adjust:none !important;\' src="images/spacer.gif"')
     # Wrting the result
     File.open(outfile, "w") {|out| out << new_contents } # No need to close the file when using the block for File class.
@@ -59,7 +59,7 @@ class TableManager
   # Insert links - with VOUCHER CODE version - Matching alt attributes(from Photoshop) with @title(from CSV)
   def insert_links_with_voucher(output_file)
     html_string = File.read(output_file)
-    # Inserting '#' links when the <img> has alt tag.
+    # Inserting '#' links when the <img> has the alt attribute.
     html_string = html_string.gsub(/(<img.*alt=")(.+)(">)/, '<a href="#" target="_blank">\\1\\2" title="\\2\\3</a>')
     ## With this code, the links in CSV must be ordered (same as photoshop slices)
     doc = Nokogiri::HTML(html_string)
