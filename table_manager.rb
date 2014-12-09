@@ -50,25 +50,26 @@ class TableManager
 
     text = File.read(htmlfile)
 
-    # MAIN TABLE STYLE
-    new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3")
     # TD Style
-    new_contents = new_contents.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
+    new_contents = text.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
+    new_contents = new_contents.gsub(/<\/td>/,"\n\t\t<\/td>")
+
     # IMG Style
     new_contents = new_contents.gsub(/<img/, "<img style='display: block; border: 0px; font-size: 8px;'")
+
     # TR SPACER GIF Style 
     new_contents = new_contents.gsub('\' src="images/spacer.gif"', ' -webkit-text-size-adjust: none !important; -moz-text-size-adjust:none !important;\' src="images/spacer.gif"')
+
     # TEST OUTPUT html
     File.open(outfile, "w") {|out| out << new_contents } # No need to close the file when using the block for File class.
   end
 
   def insert_links(output_file)
-
   ## Matching alt tag(from Photoshop) with @title(from CSV)
     html_string = File.read(output_file)
 
     # Inserting '#' links when the <img> has alt tag.
-    html_string = html_string.gsub(/(<img.*alt=")(.+)(">)/, '<a href="#" target="_blank">\\1\\2" title="\\2\\3</a>')
+    html_string = html_string.gsub(/(<img.*alt=")(.+)(">)(<\/td>)/, '<a href="#" target="_blank">\\1\\2" title="\\2\\3</a>\\4')
 
     # Inserting products links
     doc = Nokogiri::HTML(html_string)
@@ -79,7 +80,18 @@ class TableManager
     end
 
     File.open(output_file, "w") {|out| out << doc.to_s }
-    
+  end 
+
+
+  # Clean up the html and leave only a single table
+  def last_clean_up(output_file)
+    text = File.read(output_file)
+    # MAIN TABLE STYLE
+    new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3")
+    # Delete amp; for tracking the URL. 
+    new_contents = new_contents.gsub(/amp;/,"")
+
+    File.open(output_file, "w") {|out| out << new_contents }
   end 
 
 end
@@ -103,4 +115,7 @@ t1.html_with_style(the_input_file)
 
 # Insert links
 t1.insert_links('test_output.html')
+
+# Clean up the html and leave only a single table
+t1.last_clean_up('test_output.html')
 
