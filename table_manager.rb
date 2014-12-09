@@ -64,7 +64,7 @@ class TableManager
     File.open(outfile, "w") {|out| out << new_contents } # No need to close the file when using the block for File class.
   end
 
-  # Insert product links
+  # Insert links - with VOUCHER CODE version
   def insert_links_with_voucher(output_file)
   ## Matching alt tag(from Photoshop) with @title(from CSV)
     html_string = File.read(output_file)
@@ -87,14 +87,27 @@ class TableManager
         a['href'] = @content[1][:cta_link]
       # Products
       else
+        i = i - 1 # It will loop when i = 3 but the third <a> link should be from @content[2]
         next if i > @content.length - 1 or @content[i][:product_links].nil? or !@content[i][:product_links].include? 'http' or !a.xpath("//a//img//@alt") == @content[i][:product_details]
-        a['href'] = @content[i-1][:product_links] # [i-1] : it will loop from i = 3 but we need the third item from @content (index of 2)
-      end       
+        a['href'] = @content[i][:product_links] 
+      end 
     end
 
-    File.open(output_file, "w") {|out| out << doc.to_s }
+    # Shopping CTA
+    shopping_cta = []
 
+    doc.xpath("//a").each do |c|
+      shopping_cta << c if c['href'] == "\#"
+    end 
+
+    shopping_cta.reverse.each_with_index do |s, f| # This array should be reversed.
+      f = f + 1 # Shopping CTA should be inserted in the reversed way. 
+      s['href'] = @content[-f][:cta_link]
+    end 
+
+    File.open(output_file, "w") {|out| out << doc.to_s }
   end 
+
 
 
   # Clean up the html and leave only a single table
@@ -129,10 +142,9 @@ t1.filtering_links
 the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
 t1.html_with_style(the_input_file)
 
-# Insert links
-
+# Insert links with vourcher code version
 t1.insert_links_with_voucher('test_output.html')
-# t1.insert_CTA_links('test_output.html')
+
 
 # Clean up the html and leave only a single table
 t1.last_clean_up('test_output.html')
