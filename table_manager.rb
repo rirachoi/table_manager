@@ -65,7 +65,7 @@ class TableManager
   end
 
   # Insert product links
-  def insert_product_links(output_file)
+  def insert_links_with_voucher(output_file)
   ## Matching alt tag(from Photoshop) with @title(from CSV)
     html_string = File.read(output_file)
 
@@ -75,20 +75,24 @@ class TableManager
     # Inserting products links
     doc = Nokogiri::HTML(html_string)
 
+    # alt_string = doc.xpath("//a//img//@alt")
+
+    ## With this code, the links in CSV must be ordered (same as photoshop slices)
     doc.xpath("//a").each_with_index do |a, i|
-    next if i > @content.length - 1 or @content[i][:product_links].nil? or !@content[i][:product_links].include? 'http'
-      a['href'] = @content[i][:product_links]
+      # Banner CTA (from 0 to 2)
+      if i < 2  
+        a['href'] = @content[0][:cta_link]
+      # Conditions & Policy 
+      elsif i == 2
+        a['href'] = @content[1][:cta_link]
+      # Products
+      else
+        next if i > @content.length - 1 or @content[i][:product_links].nil? or !@content[i][:product_links].include? 'http' or !a.xpath("//a//img//@alt") == @content[i][:product_details]
+        a['href'] = @content[i-1][:product_links] # [i-1] : it will loop from i = 3 but we need the third item from @content (index of 2)
+      end       
     end
 
     File.open(output_file, "w") {|out| out << doc.to_s }
-  end 
-
-  # Insert CTA links
-  def insert_CTA_links(output_file)
-    html_string = File.read(output_file)
-
-    # Inserting CTA links
-    doc = Nokogiri::HTML(html_string)
 
   end 
 
@@ -126,9 +130,9 @@ the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
 t1.html_with_style(the_input_file)
 
 # Insert links
-# t1.insert_CTA_links('test_output.html')
-t1.insert_product_links('test_output.html')
 
+t1.insert_links_with_voucher('test_output.html')
+# t1.insert_CTA_links('test_output.html')
 
 # Clean up the html and leave only a single table
 t1.last_clean_up('test_output.html')
