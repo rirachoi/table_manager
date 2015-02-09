@@ -64,9 +64,10 @@ class TableManager
 
   def insert_links_with_numbers(output_file)
     html_string = File.read(output_file)
-    # Inserting '#' links when the <img> has the alt attribute.
-    html_string = html_string.gsub(/(<img.*alt=")(.+)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>')
-
+    # Inserting '#' links when the <img> has the alt attribute with picture numbers.
+    html_string = html_string.gsub(/(<img.*alt=")(\d)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>')
+    # IF THERE IS CODE SPAN IN THE NEWSLETTERS
+    html_string = html_string.gsub(/(min-width:.*)(">\n\t\t.*)(<img.*alt=")([a-zA-Z]+)(">)/, 'font-size:20px !important; font-family:Arial, Helvetica, sans-serif; color:#030303; text-align:center; letter-spacing:1px; \\1"><strong>\\4</strong>')
     ## With this code, the links in CSV must be ordered (same as photoshop slices)
     doc = Nokogiri::HTML(html_string)
     # Making a new array for Nokogiri alts - Picture's number should be same as link's number
@@ -80,6 +81,7 @@ class TableManager
       img["title"] = @content[picture_number[n].to_i].values.first # Hover Text(title)
       img["alt"] = @content[picture_number[n].to_i].values.first # Alt text(alt)
     end 
+
     # Wrting the result
     File.open(output_file, "w") {|out| out << doc.to_s }
   end 
@@ -91,6 +93,7 @@ class TableManager
     new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3")
     # Delete amp; for tracking the URL. 
     new_contents = new_contents.gsub(/amp;/,"")
+
     # Wrting the result
     File.open(output_file, "w") {|out| out << new_contents }
   end 
