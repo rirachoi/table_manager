@@ -2,7 +2,6 @@ require 'csv'
 require 'nokogiri'
 
 class TableManager
-
   attr_accessor :content
 
 ### Initialize - Creating an empty array
@@ -24,7 +23,6 @@ class TableManager
         @content << hash_row
       end
     end
- 
   end 
 
   # Filtering links
@@ -37,11 +35,9 @@ class TableManager
       else
         c[:cta_link]
       end
-      # Delete Nil elements
-      c.delete_if { |k, v| v.nil? }
+      c.delete_if { |k, v| v.nil? }# Delete Nil elements
     end
-    # Return Content
-    @content
+    @content # Return Content
     
   end
 
@@ -49,7 +45,6 @@ class TableManager
   def html_with_style(htmlfile)
     infile = htmlfile
     outfile = "test_output.html"
-
     text = File.read(htmlfile)
     # TD Style
     new_contents = text.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
@@ -62,26 +57,26 @@ class TableManager
     File.open(outfile, "w") {|out| out << new_contents } # No need to close the file when using the block for File class.
   end
 
+  # Insert Links compared picture's number to link's order number
   def insert_links_with_numbers(output_file)
     html_string = File.read(output_file)
-    # Inserting '#' links when the <img> has the alt attribute with picture numbers.
-    html_string = html_string.gsub(/(<img.*alt=")(\d)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>')
-    # IF THERE IS CODE SPAN IN THE NEWSLETTERS
+    # Inserting '#' links when the <img> has the alt attribute = picture numbers.
+    html_string = html_string.gsub(/(<img.*alt=")(\d.*)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>')
+    # IF THERE IS CODE SPAN IN THE NEWSLETTERS when the <img> has the alt for Voucher Code.
     html_string = html_string.gsub(/(min-width:.*)(">\n\t\t.*)(<img.*alt=")([a-zA-Z]+)(">)/, 'font-size:20px !important; font-family:Arial, Helvetica, sans-serif; color:#030303; text-align:center; letter-spacing:1px; \\1"><strong>\\4</strong>')
-    ## With this code, the links in CSV must be ordered (same as photoshop slices)
+    # With this code, the links in CSV must be in order (same as photoshop slices)
     doc = Nokogiri::HTML(html_string)
     # Making a new array for Nokogiri alts - Picture's number should be same as link's number
     picture_number = doc.xpath("//a//img//@alt").map { |alt| alt.to_s }
-    # Inserting links in order.  
+    # Inserting links.  
     doc.xpath("//a").each_with_index do |a, i|
       a["href"] = @content[picture_number[i].to_i].values.last # Links
     end 
-    # Changing alt & title tag into prodouct details. 
+    # Changing alt & title tag to prodouct details. 
     doc.xpath("//a//img").each_with_index do |img, n|
       img["title"] = @content[picture_number[n].to_i].values.first # Hover Text(title)
       img["alt"] = @content[picture_number[n].to_i].values.first # Alt text(alt)
     end 
-
     # Wrting the result
     File.open(output_file, "w") {|out| out << doc.to_s }
   end 
@@ -93,34 +88,27 @@ class TableManager
     new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3")
     # Delete amp; for tracking the URL. 
     new_contents = new_contents.gsub(/amp;/,"")
-
     # Wrting the result
     File.open(output_file, "w") {|out| out << new_contents }
-  end 
-
-  
+  end   
 end # END OF CLASS / TABLE MANAGER 
 
 
-######## TESTING
+################# TESTING IT START ###################
 
 # Initialize
 t1 = TableManager.new
-
 # Open CSV file
 the_csv_file = Dir['*'].select {|x| x =~ /_.*(csv)/ }.sort.first
 t1.open_csv(the_csv_file)
-
 # Filter data and Convert data to <a>tag
 t1.filtering_links
-
 # Open HTML file(input) and wirte new HTML file(output)
 the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
 t1.html_with_style(the_input_file)
-
 # Insert links with picture's number
 t1.insert_links_with_numbers('test_output.html')
-
 # Clean up the html and leave only a single table
 t1.last_clean_up('test_output.html')
 
+################# TESTING IT END ###################
