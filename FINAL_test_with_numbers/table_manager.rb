@@ -63,7 +63,7 @@ class TableManager
     # Inserting '#' links when the <img> has the alt attribute = picture numbers.
     html_string = html_string.gsub(/(<img.*alt=")(\d.*)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>')
     # IF THERE IS CODE SPAN IN THE NEWSLETTERS when the <img> has the alt for Voucher Code.
-    html_string = html_string.gsub(/(min-width:.*)(">\n\t\t.*)(<img.*alt=")([a-zA-Z]+)(">)/, 'font-size:20px !important; font-family:Arial, Helvetica, sans-serif; color:#030303; text-align:center; letter-spacing:1px; \\1"><strong>\\4</strong>')
+    html_string = html_string.gsub(/(min-width:.*)(">\n\t\t.*)(<img.*alt=")([a-zA-Z]+)(">)/, 'font-size:20px !important; font-family:Helvetica Neue, Helvetica, Arial, serif; color:#030303; text-align:center; letter-spacing:1px; \\1"><strong>\\4</strong>')
     # With this code, the links in CSV must be in order (same as photoshop slices)
     doc = Nokogiri::HTML(html_string)
     # Making a new array for Nokogiri alts - Picture's number should be same as link's number
@@ -71,7 +71,7 @@ class TableManager
     # Inserting links.  
     doc.xpath("//a").each_with_index do |a, i|
       a["href"] = @content[picture_number[i].to_i].values.last # Links
-    end 
+    end   
     # Changing alt & title tag to prodouct details. 
     doc.xpath("//a//img").each_with_index do |img, n|
       img["title"] = @content[picture_number[n].to_i].values.first # Hover Text(title)
