@@ -43,39 +43,30 @@ class TableManager
 
 ### HTML - Insert code for Email. 
   def html_with_style(htmlfile)
-    infile = htmlfile
     outfile = "test_output.html"
     text = File.read(htmlfile)
     # TD Style
-    new_contents = text.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6')
-    new_contents = new_contents.gsub(/<\/td>/, "\n\t\t<\/td>")
-    # IMG Style
-    new_contents = new_contents.gsub(/<img/, "<img style='display: block; border: 0px; font-size: 8px;'")
-    # SPACER GIF Style 
-    new_contents = new_contents.gsub('\' src="images/spacer.gif"', ' -webkit-text-size-adjust: none !important; -moz-text-size-adjust:none !important;\' src="images/spacer.gif"')
+    new_contents = text.gsub(/(<td)([.\s\S]*?)>([.\s\S]*?<img[.\s\S]*?width[:=]"?)(\d+)([.\s\S]*?height[:=]"?)(\d+)/, '\\1 width="\\4" height="\\6"\\2 style="font-size: 8px; min-width:\\4px;">\\3\\4\\5\\6').gsub(/<\/td>/, "\n\t\t<\/td>").gsub(/<img/, "<img style='display: block; border: 0px; font-size: 8px;'").gsub('\' src="images/spacer.gif"', ' -webkit-text-size-adjust: none !important; -moz-text-size-adjust:none !important;\' src="images/spacer.gif"')
     # Wrting the result
     File.open(outfile, "w") {|out| out << new_contents } # No need to close the file when using the block for File class.
   end
 
   # Insert Links compared picture's number to link's order number
   def insert_links_with_numbers(output_file)
-    html_string = File.read(output_file)
-    # Inserting '#' links when the <img> has the alt attribute = picture numbers.
-    html_string = html_string.gsub(/(<img.*alt=")(\d.*)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>')
-    # IF THERE IS CODE SPAN IN THE NEWSLETTERS when the <img> has the alt for Voucher Code.
-    html_string = html_string.gsub(/(min-width:.*)(">\n\t\t.*)(<img.*alt=")([a-zA-Z]+)(">)/, 'font-size:20px !important; font-family:Helvetica Neue, Helvetica, Arial, serif; color:#030303; text-align:center; letter-spacing:1px; \\1"><strong>\\4</strong>')
+    str_html = File.read(output_file)
+    # First Gsub: Inserting '#' links if IMG has alt-number
+    # Second Gsub: Inserting 'CODE' text if IMG has alt-letters of code 
+    str_html = str_html.gsub(/(<img.*alt=")(\d.*)(">)/, '<a href="\\2" target="_blank">\\1\\2" title="\\2\\3</a>').gsub(/(min-width:.*)(">\n\t\t.*)(<img.*alt=")([a-zA-Z]+)(">)/, 'font-size:20px !important; font-family:Helvetica Neue, Helvetica, Arial, serif; color:#030303; text-align:center; letter-spacing:1px; \\1"><strong>\\4</strong>')
     # With this code, the links in CSV must be in order (same as photoshop slices)
-    doc = Nokogiri::HTML(html_string)
+    doc = Nokogiri::HTML(str_html)
     # Making a new array for Nokogiri alts - Picture's number should be same as link's number
-    picture_number = doc.xpath("//a//img//@alt").map { |alt| alt.to_s }
+    pic_number = doc.xpath("//a//img//@alt").map { |alt| alt.to_s }
     # Inserting links.  
-    doc.xpath("//a").each_with_index do |a, i|
-      a["href"] = @content[picture_number[i].to_i].values.last # Links
-    end   
+    doc.xpath("//a").each_with_index { |a, i| a["href"] = @content[pic_number[i].to_i].values.last } # Links  
     # Changing alt & title tag to prodouct details. 
     doc.xpath("//a//img").each_with_index do |img, n|
-      img["title"] = @content[picture_number[n].to_i].values.first # Hover Text(title)
-      img["alt"] = @content[picture_number[n].to_i].values.first # Alt text(alt)
+      img["title"] = @content[pic_number[n].to_i].values.first # Hover Text(title)
+      img["alt"] = @content[pic_number[n].to_i].values.first # Alt text(alt)
     end 
     # Wrting the result
     File.open(output_file, "w") {|out| out << doc.to_s }
@@ -85,9 +76,7 @@ class TableManager
   def last_clean_up(output_file)
     text = File.read(output_file)
     # MAIN TABLE STYLE
-    new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3")
-    # Delete amp; for tracking the URL. 
-    new_contents = new_contents.gsub(/amp;/,"")
+    new_contents = text.gsub(/([.\n\r\s\S]*?)(<table)([.\s\S]*?)(id="Table_01")([.\n\r\s\S]*?)(<\/table>)([.\n\r\s\S]*?<\/html>)/, "<table style='min-width:620px;' align='center'\\5\\6\\3").gsub(/amp;/,"")
     # Wrting the result
     File.open(output_file, "w") {|out| out << new_contents }
   end   
