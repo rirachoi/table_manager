@@ -115,19 +115,22 @@ end # END OF CLASS / TABLE MANAGER
 #################### PRESS [command + B] TO TEST IT ######################
 ##########################################################################
 
+
+SelectedGender = 'M' # Please Type Capital 'F' or 'M'
+
 # Initialize
 t1 = TableManager.new
 # Open CSV file
-the_csv_file = Dir['*'].select {|x| x =~ /_.*(csv)/ }.sort.first
+the_csv_file = Dir["#{ SelectedGender }/*"].select {|x| x =~ /_.*(csv)/ }.sort.first
 t1.open_csv(the_csv_file)
 # Filter data and Convert data to <a>tag
 t1.filtering_links
 # Open HTML file(input) and wirte new HTML file(output)
-the_input_file = Dir['*'].select {|x| x =~ /_.*(html)/ }.sort.first
-t1.table_cell_with_number(the_input_file, 'test_output_F.html')
+the_input_file = Dir["#{ SelectedGender }/*"].select {|x| x =~ /_.*(html)/ }.sort.first
+t1.table_cell_with_number(the_input_file, "#{ SelectedGender }/test_output.html")
 # Insert links with picture's number
-t1.insert_links_with_numbers('test_output_F.html')
+t1.insert_links_with_numbers("#{ SelectedGender }/test_output.html")
 # Clean up the html and leave only a single table
-t1.last_clean_up('test_output_F.html')
+t1.last_clean_up("#{ SelectedGender }/test_output.html")
 
 ##########################################################################
